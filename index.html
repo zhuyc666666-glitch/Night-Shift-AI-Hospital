@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -162,25 +162,38 @@
 </head>
 <body>
   <div class="screen-noise" aria-hidden="true"></div>
-  <main class="game-shell">
+
+  <section id="languageScreen" class="language-screen" aria-labelledby="language-title">
+    <div class="language-panel terminal-card">
+      <p class="kicker">System Language / 系统语言</p>
+      <h1 id="language-title">Night Shift: AI Hospital</h1>
+      <p class="language-copy">Select interface language before entering the night ward.</p>
+      <div class="language-actions">
+        <button type="button" data-language="en">English</button>
+        <button type="button" data-language="zh">中文</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="game-shell" aria-hidden="true">
     <header class="top-bar">
       <div>
-        <p class="kicker">Ward 07 / Emergency AI Support</p>
+        <p class="kicker" id="wardKicker">Ward 07 / Emergency AI Support</p>
         <h1>Night Shift: AI Hospital</h1>
       </div>
       <div class="time-readout">02:13 AM</div>
       <dl class="vitals-panel" aria-label="Shift status">
         <div>
           <dt>Trust</dt>
-          <dd>42</dd>
+          <dd>50</dd>
         </div>
         <div>
           <dt>Stress</dt>
-          <dd>18</dd>
+          <dd>0</dd>
         </div>
         <div class="warning-stat">
           <dt>Error</dt>
-          <dd>03</dd>
+          <dd>0</dd>
         </div>
       </dl>
       <button id="muteButton" class="mute-button" type="button" aria-pressed="true">Muted</button>
@@ -189,11 +202,11 @@
     <section class="start-zone" aria-labelledby="start-title">
       <div>
         <h2 id="start-title">Start Shift</h2>
-        <p>Enter the night ward and review each AI-assisted case before the system makes its final call.</p>
+        <p id="startCopy">Enter the night ward and review each AI-assisted case before the system makes its final call.</p>
       </div>
       <label class="doctor-input">
-        <span>值班医生</span>
-        <input type="text" placeholder="请输入值班医生姓名" autocomplete="name">
+        <span>Doctor on Duty</span>
+        <input type="text" placeholder="Enter doctor name" autocomplete="name">
       </label>
       <button id="startButton" class="primary-button" type="button">Start Shift</button>
     </section>
@@ -205,19 +218,13 @@
           <span class="panel-code">EMR-0213</span>
         </div>
         <div class="patient-profile">
-          <p><strong>Name:</strong> Lin Mei</p>
-          <p><strong>Age:</strong> 34</p>
-          <p><strong>Room:</strong> 7B Observation</p>
-          <p><strong>Complaint:</strong> Chest pressure, cold sweat, fragmented speech.</p>
+          <p><strong>Name:</strong> --</p>
+          <p><strong>Age:</strong> --</p>
+          <p><strong>Complaint:</strong> --</p>
         </div>
         <div class="data-block">
           <h3>Recent Vitals</h3>
-          <ul>
-            <li>HR: 118 bpm</li>
-            <li>BP: 92/58 mmHg</li>
-            <li>SpO2: 91%</li>
-            <li>Temp: 37.8 C</li>
-          </ul>
+          <ul><li>--</li></ul>
         </div>
       </article>
 
@@ -228,9 +235,6 @@
         </div>
         <div class="ai-output">
           <p>&gt; Loading triage model...</p>
-          <p>&gt; Pattern match confidence: 71%</p>
-          <p class="alert-line">&gt; Warning: contradictory symptom cluster detected.</p>
-          <p>&gt; Suggested diagnosis pending doctor review.</p>
         </div>
         <p id="statusText" class="status-text">Awaiting shift authorization.</p>
       </article>
@@ -252,12 +256,10 @@
     <section class="system-log terminal-card" aria-labelledby="log-title">
       <div class="panel-heading">
         <h2 id="log-title">System Log</h2>
-        <span class="warning-text">3 unresolved warnings</span>
+        <span class="warning-text">0 unresolved warnings</span>
       </div>
       <ol>
-        <li>[02:09:44] Night shift terminal initialized.</li>
-        <li>[02:11:02] AI diagnostic assistant connected to EMR archive.</li>
-        <li class="log-warning">[02:13:00] Error variance detected in patient risk score.</li>
+        <li>[02:13:00] Awaiting shift authorization.</li>
       </ol>
     </section>
   </main>
