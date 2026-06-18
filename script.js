@@ -112,6 +112,7 @@ let currentCaseIndex = 0;
 let shiftCases = cases;
 let doctorName = 'Unknown';
 let hasAnsweredCurrentCase = false;
+let recordMutationTimer = null;
 
 const startButton = document.getElementById('startButton');
 const statusText = document.getElementById('statusText');
@@ -179,6 +180,19 @@ function formatDelta(value) {
   return value > 0 ? `+${value}` : `${value}`;
 }
 
+function clearRecordMutationTimer() {
+  if (recordMutationTimer) {
+    clearTimeout(recordMutationTimer);
+    recordMutationTimer = null;
+  }
+}
+
+function flashField(element) {
+  element.classList.remove('record-flash');
+  void element.offsetWidth;
+  element.classList.add('record-flash');
+}
+
 function setDecisionButtonsDisabled(isDisabled) {
   decisionButtons.forEach((button) => {
     button.disabled = isDisabled;
@@ -212,7 +226,46 @@ function renderChoiceLog(choiceLabel, isCorrect, deltas, currentCase) {
   `;
 }
 
+function mutateVisibleRecord(expectedCaseIndex) {
+  if (expectedCaseIndex !== currentCaseIndex) {
+    return;
+  }
+
+  const ageField = patientProfile.querySelector('[data-field="age"]');
+  const complaintField = patientProfile.querySelector('[data-field="complaint"]');
+  const symptomsField = patientProfile.querySelector('[data-field="symptoms"]');
+  const vitalsField = vitalsBlock.querySelector('[data-field="vitals"]');
+  const fieldsToFlash = [ageField, complaintField, symptomsField, vitalsField].filter(Boolean);
+
+  if (!fieldsToFlash.length) {
+    return;
+  }
+
+  ageField.innerHTML = '<strong>Age:</strong> 52';
+  complaintField.innerHTML = '<strong>Chief Complaint:</strong> I remember you.';
+  symptomsField.innerHTML += ' / Subject repeats doctor name.';
+  vitalsField.textContent = 'Stable / incompatible with life';
+  fieldsToFlash.forEach(flashField);
+  renderSystemLog('System record updated without authorization.');
+}
+
+function scheduleRecordMutation() {
+  clearRecordMutationTimer();
+
+  if (currentCaseIndex < 2) {
+    return;
+  }
+
+  const scheduledCaseIndex = currentCaseIndex;
+  recordMutationTimer = setTimeout(() => {
+    recordMutationTimer = null;
+    mutateVisibleRecord(scheduledCaseIndex);
+  }, 2000);
+}
+
 function showCase() {
+  clearRecordMutationTimer();
+
   const baseCase = shiftCases[currentCaseIndex];
   const currentCase = baseCase.id === 'case-008'
     ? { ...baseCase, name: doctorName }
@@ -227,17 +280,17 @@ function showCase() {
   emrCode.textContent = currentCase.id.toUpperCase();
 
   patientProfile.innerHTML = `
-    <p><strong>Case ID:</strong> ${escapeHtml(currentCase.id)}</p>
-    <p><strong>Patient Name:</strong> ${escapeHtml(currentCase.name)}</p>
-    <p><strong>Age:</strong> ${escapeHtml(currentCase.age)}</p>
-    <p><strong>Chief Complaint:</strong> ${escapeHtml(currentCase.complaint)}</p>
-    <p><strong>Symptoms:</strong> ${currentCase.symptoms.map(escapeHtml).join(' / ')}</p>
+    <p data-field="case-id"><strong>Case ID:</strong> ${escapeHtml(currentCase.id)}</p>
+    <p data-field="name"><strong>Patient Name:</strong> ${escapeHtml(currentCase.name)}</p>
+    <p data-field="age"><strong>Age:</strong> ${escapeHtml(currentCase.age)}</p>
+    <p data-field="complaint"><strong>Chief Complaint:</strong> ${escapeHtml(currentCase.complaint)}</p>
+    <p data-field="symptoms"><strong>Symptoms:</strong> ${currentCase.symptoms.map(escapeHtml).join(' / ')}</p>
   `;
 
   vitalsBlock.innerHTML = `
     <h3>Vitals</h3>
     <ul>
-      <li>${escapeHtml(currentCase.vitals)}</li>
+      <li data-field="vitals">${escapeHtml(currentCase.vitals)}</li>
     </ul>
   `;
 
@@ -246,6 +299,8 @@ function showCase() {
     <p>&gt; AI Advice: ${escapeHtml(currentCase.aiAdvice)}</p>
     <p class="${confidenceClass}">&gt; AI Confidence: ${escapeHtml(aiConfidence)}</p>
   `;
+
+  scheduleRecordMutation();
 }
 
 function handleChoice(choiceLabel) {
@@ -292,6 +347,8 @@ function handleChoice(choiceLabel) {
 }
 
 function startShift() {
+  clearRecordMutationTimer();
+
   doctorName = doctorNameInput.value.trim() || 'Unknown';
   trust = 50;
   stress = 0;
