@@ -125,6 +125,8 @@ const vitalsBlock = document.querySelector('.data-block');
 const aiOutput = document.querySelector('.ai-output');
 const logList = document.querySelector('.system-log ol');
 const warningText = document.querySelector('.system-log .warning-text');
+const actionButtons = document.querySelectorAll('.action-stack button');
+const nextPatientButton = actionButtons[3];
 
 function escapeHtml(value) {
   return String(value)
@@ -148,6 +150,11 @@ function getCasesForShift() {
   });
 }
 
+function getAiConfidence(index) {
+  const confidenceValues = ['94%', '89%', '73%', '61%', '48%', '33%', '17%', 'ERROR'];
+  return confidenceValues[index] || 'ERROR';
+}
+
 function setGameVisibility(isRunning) {
   startZone.style.display = isRunning ? 'none' : '';
   gameGrid.style.display = isRunning ? '' : 'none';
@@ -165,28 +172,38 @@ function renderSystemLog(message) {
   logList.innerHTML = `<li>[02:13:00] ${escapeHtml(message)}</li>`;
 }
 
-function renderCase() {
-  const currentCase = shiftCases[currentCaseIndex];
+function showCase() {
+  const baseCase = shiftCases[currentCaseIndex];
+  const currentCase = baseCase.id === 'case-008'
+    ? { ...baseCase, name: doctorName }
+    : baseCase;
+  const aiConfidence = getAiConfidence(currentCaseIndex);
+  const confidenceClass = currentCaseIndex > 1 ? 'alert-line' : '';
 
+  nextPatientButton.style.display = 'none';
+  statusText.textContent = '';
   emrCode.textContent = currentCase.id.toUpperCase();
+
   patientProfile.innerHTML = `
-    <p><strong>Name:</strong> ${escapeHtml(currentCase.name)}</p>
+    <p><strong>Case ID:</strong> ${escapeHtml(currentCase.id)}</p>
+    <p><strong>Patient Name:</strong> ${escapeHtml(currentCase.name)}</p>
     <p><strong>Age:</strong> ${escapeHtml(currentCase.age)}</p>
-    <p><strong>Complaint:</strong> ${escapeHtml(currentCase.complaint)}</p>
+    <p><strong>Chief Complaint:</strong> ${escapeHtml(currentCase.complaint)}</p>
     <p><strong>Symptoms:</strong> ${currentCase.symptoms.map(escapeHtml).join(' / ')}</p>
   `;
+
   vitalsBlock.innerHTML = `
-    <h3>Recent Vitals</h3>
+    <h3>Vitals</h3>
     <ul>
       <li>${escapeHtml(currentCase.vitals)}</li>
     </ul>
   `;
+
   aiOutput.innerHTML = `
-    <p>&gt; Case loaded: ${escapeHtml(currentCase.id)}</p>
-    <p>&gt; AI diagnosis: ${escapeHtml(currentCase.aiDiagnosis)}</p>
-    <p>&gt; AI advice: ${escapeHtml(currentCase.aiAdvice)}</p>
+    <p>&gt; AI Diagnosis: ${escapeHtml(currentCase.aiDiagnosis)}</p>
+    <p>&gt; AI Advice: ${escapeHtml(currentCase.aiAdvice)}</p>
+    <p class="${confidenceClass}">&gt; AI Confidence: ${escapeHtml(aiConfidence)}</p>
   `;
-  statusText.textContent = `Current patient: ${currentCase.name}. Awaiting doctor action.`;
 }
 
 function startShift() {
@@ -199,11 +216,12 @@ function startShift() {
 
   setGameVisibility(true);
   updateStats();
-  renderCase();
+  showCase();
   renderSystemLog('Shift started. AI diagnostic support system online.');
 }
 
 setGameVisibility(false);
 updateStats();
+nextPatientButton.style.display = 'none';
 
 startButton.addEventListener('click', startShift);
