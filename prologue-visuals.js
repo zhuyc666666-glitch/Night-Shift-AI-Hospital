@@ -6,6 +6,7 @@
   let isTyping=false;
   let activeLine=null;
   let activeText='';
+  let rememberedDoctorName='Unknown';
 
   const TEXT={
     en:{continue:'Continue',skip:'Skip',top:'AETHER-MD / HOSPITAL AI MONITORING',map:'Hospital Map',ecg:'ECG Monitor',status:'AI System Status',camera:'Security Camera Matrix',feed:'Hospital Alert Feed',doctor:name=>`Dr. ${name}`,alerts:['Ambulance arrival detected.','Radiology system delayed.','Unknown patient record synced.'],statusRows:['Model Confidence','Patient Queue','Risk Prediction','Human Override'],statusValues:['87%','08 waiting','Active','Available'],cams:['Camera 01 / Corridor','Camera 02 / Triage Desk','Camera 03 / Empty Ward'],rooms:['Emergency Room','ICU','Radiology','AI Core','Morgue'],screens:name=>[
@@ -27,7 +28,8 @@
   function getLang(){return document.documentElement.lang==='zh-CN'?'zh':'en'}
   function ui(){return TEXT[getLang()]}
   function safe(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
-  function doctorName(){const input=document.querySelector('.doctor-input input');const value=input&&input.value.trim();return value||'Unknown'}
+  function doctorName(){return rememberedDoctorName||'Unknown'}
+  function captureDoctorName(){const input=document.querySelector('.doctor-input input');rememberedDoctorName=(input&&input.value.trim())||'Unknown'}
   function clearVisualTimer(){visualToken+=1;if(visualTimer){clearTimeout(visualTimer);visualTimer=null}isTyping=false;activeLine=null;activeText=''}
 
   function ensureStyles(){
@@ -136,5 +138,9 @@
     render(0,token);
   }
 
+  const startButton=document.getElementById('startButton');
+  const nameInput=document.querySelector('.doctor-input input');
+  if(nameInput)nameInput.addEventListener('input',captureDoctorName);
+  if(startButton)startButton.addEventListener('click',captureDoctorName,true);
   startPrologue=startVisualPrologue;
 })();
