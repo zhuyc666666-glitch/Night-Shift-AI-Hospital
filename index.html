@@ -5,6 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Night Shift: AI Hospital</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .top-bar {
+      grid-template-columns: minmax(280px, 1fr) auto minmax(320px, auto) auto;
+    }
+
+    .mute-button {
+      align-self: stretch;
+      min-width: 84px;
+      padding: 0 12px;
+      color: var(--muted);
+      background: rgba(3, 12, 12, 0.84);
+    }
+
+    .mute-button[aria-pressed="false"] {
+      color: var(--green);
+      border-color: rgba(140, 255, 199, 0.42);
+    }
+
+    @media (max-width: 980px) {
+      .top-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .mute-button {
+        justify-self: start;
+        min-height: 40px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="screen-noise" aria-hidden="true"></div>
@@ -29,7 +58,7 @@
           <dd>03</dd>
         </div>
       </dl>
-      <button id="muteButton" class="mute-button" type="button" aria-pressed="true">Mute</button>
+      <button id="muteButton" class="mute-button" type="button" aria-pressed="true">Muted</button>
     </header>
 
     <section class="start-zone" aria-labelledby="start-title">
