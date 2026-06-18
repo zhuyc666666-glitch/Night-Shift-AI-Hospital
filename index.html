@@ -33,6 +33,131 @@
         min-height: 40px;
       }
     }
+
+    @media (max-width: 640px) {
+      body {
+        overflow-x: hidden;
+      }
+
+      .game-shell {
+        gap: 12px;
+        padding: 10px;
+      }
+
+      .top-bar {
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .top-bar h1 {
+        font-size: 22px;
+        line-height: 1.25;
+      }
+
+      .kicker,
+      .panel-code,
+      .status-live {
+        font-size: 11px;
+      }
+
+      .time-readout {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 18px;
+        text-align: center;
+      }
+
+      .vitals-panel {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px;
+      }
+
+      .vitals-panel div {
+        min-width: 0;
+        padding: 9px 7px;
+      }
+
+      .vitals-panel dt {
+        font-size: 10px;
+      }
+
+      .vitals-panel dd {
+        font-size: 20px;
+        overflow-wrap: anywhere;
+      }
+
+      .mute-button {
+        width: 100%;
+        min-height: 44px;
+        justify-self: stretch;
+        text-align: center;
+      }
+
+      .start-zone {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+        padding: 14px;
+      }
+
+      .doctor-input input,
+      .primary-button {
+        min-height: 48px;
+      }
+
+      .game-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+      }
+
+      .emr-card,
+      .ai-card,
+      .actions-card {
+        width: 100%;
+      }
+
+      .terminal-card {
+        padding: 14px;
+      }
+
+      .panel-heading {
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+      }
+
+      .patient-profile,
+      .data-block,
+      .ai-output,
+      .status-text,
+      .system-log ol {
+        font-size: 14px;
+      }
+
+      .ai-output {
+        min-height: 190px;
+        padding: 14px;
+      }
+
+      .action-stack {
+        gap: 10px;
+      }
+
+      .action-stack button,
+      .ending-panel button {
+        min-height: 52px;
+        width: 100%;
+        padding: 0 14px;
+        font-size: 15px;
+        text-align: center;
+      }
+
+      .system-log {
+        min-height: 120px;
+      }
+    }
   </style>
 </head>
 <body>
