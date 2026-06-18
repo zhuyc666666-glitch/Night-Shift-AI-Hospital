@@ -105,6 +105,9 @@ const cases = [
   }
 ];
 
+const TYPEWRITER_SPEED = 30;
+const TYPEWRITER_PAUSE = 650;
+
 let trust = 50;
 let stress = 0;
 let error = 0;
@@ -113,6 +116,9 @@ let shiftCases = cases;
 let doctorName = 'Unknown';
 let hasAnsweredCurrentCase = false;
 let recordMutationTimer = null;
+let typewriterTimer = null;
+let typewriterPauseTimer = null;
+let isAiTyping = false;
 
 const startButton = document.getElementById('startButton');
 const statusText = document.getElementById('statusText');
@@ -158,6 +164,11 @@ function getAiConfidence(index) {
   return confidenceValues[index] || 'ERROR';
 }
 
+function getGlitchToken(index) {
+  const tokens = ['DATA_SYNC_ERROR', 'SUBJECT_NOT_PATIENT', 'DOCTOR_ID_MATCH'];
+  return tokens[(index - 4) % tokens.length];
+}
+
 function normalizeChoice(choice) {
   const normalized = choice.toLowerCase();
 
@@ -185,6 +196,20 @@ function clearRecordMutationTimer() {
     clearTimeout(recordMutationTimer);
     recordMutationTimer = null;
   }
+}
+
+function clearTypewriterTimers() {
+  if (typewriterTimer) {
+    clearTimeout(typewriterTimer);
+    typewriterTimer = null;
+  }
+
+  if (typewriterPauseTimer) {
+    clearTimeout(typewriterPauseTimer);
+    typewriterPauseTimer = null;
+  }
+
+  isAiTyping = false;
 }
 
 function flashField(element) {
@@ -263,8 +288,85 @@ function scheduleRecordMutation() {
   }, 2000);
 }
 
+function buildAiTerminalLines(currentCase, aiConfidence, confidenceClass) {
+  const lines = [
+    { text: `> AI Diagnosis: ${currentCase.aiDiagnosis}`, className: '' }
+  ];
+
+  if (currentCaseIndex >= 4) {
+    lines.push({ text: `> ${getGlitchToken(currentCaseIndex)}`, className: 'alert-line', pauseAfter: true });
+  }
+
+  lines.push(
+    { text: `> AI Advice: ${currentCase.aiAdvice}`, className: '' },
+    { text: `> AI Confidence: ${aiConfidence}`, className: confidenceClass }
+  );
+
+  return lines;
+}
+
+function runTypewriter(lines, expectedCaseIndex) {
+  clearTypewriterTimers();
+  aiOutput.innerHTML = '';
+  isAiTyping = true;
+  setDecisionButtonsDisabled(true);
+
+  let lineIndex = 0;
+  let charIndex = 0;
+  let activeLine = null;
+
+  function finishTyping() {
+    isAiTyping = false;
+    typewriterTimer = null;
+    typewriterPauseTimer = null;
+    setDecisionButtonsDisabled(false);
+  }
+
+  function typeNextCharacter() {
+    if (expectedCaseIndex !== currentCaseIndex) {
+      clearTypewriterTimers();
+      return;
+    }
+
+    if (!activeLine) {
+      const line = lines[lineIndex];
+      activeLine = document.createElement('p');
+
+      if (line.className) {
+        activeLine.className = line.className;
+      }
+
+      aiOutput.appendChild(activeLine);
+    }
+
+    const line = lines[lineIndex];
+    activeLine.textContent += line.text.charAt(charIndex);
+    charIndex += 1;
+
+    if (charIndex < line.text.length) {
+      typewriterTimer = setTimeout(typeNextCharacter, TYPEWRITER_SPEED);
+      return;
+    }
+
+    lineIndex += 1;
+    charIndex = 0;
+    activeLine = null;
+
+    if (lineIndex >= lines.length) {
+      finishTyping();
+      return;
+    }
+
+    const delay = line.pauseAfter || currentCaseIndex >= 4 ? TYPEWRITER_PAUSE : TYPEWRITER_SPEED;
+    typewriterPauseTimer = setTimeout(typeNextCharacter, delay);
+  }
+
+  typeNextCharacter();
+}
+
 function showCase() {
   clearRecordMutationTimer();
+  clearTypewriterTimers();
 
   const baseCase = shiftCases[currentCaseIndex];
   const currentCase = baseCase.id === 'case-008'
@@ -274,7 +376,7 @@ function showCase() {
   const confidenceClass = currentCaseIndex > 1 ? 'alert-line' : '';
 
   hasAnsweredCurrentCase = false;
-  setDecisionButtonsDisabled(false);
+  setDecisionButtonsDisabled(true);
   nextPatientButton.style.display = 'none';
   statusText.textContent = '';
   emrCode.textContent = currentCase.id.toUpperCase();
@@ -294,17 +396,12 @@ function showCase() {
     </ul>
   `;
 
-  aiOutput.innerHTML = `
-    <p>&gt; AI Diagnosis: ${escapeHtml(currentCase.aiDiagnosis)}</p>
-    <p>&gt; AI Advice: ${escapeHtml(currentCase.aiAdvice)}</p>
-    <p class="${confidenceClass}">&gt; AI Confidence: ${escapeHtml(aiConfidence)}</p>
-  `;
-
+  runTypewriter(buildAiTerminalLines(currentCase, aiConfidence, confidenceClass), currentCaseIndex);
   scheduleRecordMutation();
 }
 
 function handleChoice(choiceLabel) {
-  if (hasAnsweredCurrentCase) {
+  if (hasAnsweredCurrentCase || isAiTyping) {
     return;
   }
 
@@ -348,6 +445,7 @@ function handleChoice(choiceLabel) {
 
 function startShift() {
   clearRecordMutationTimer();
+  clearTypewriterTimers();
 
   doctorName = doctorNameInput.value.trim() || 'Unknown';
   trust = 50;
