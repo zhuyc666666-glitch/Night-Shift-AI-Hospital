@@ -105,13 +105,37 @@ const cases = [
   }
 ];
 
+let trust = 50;
+let stress = 0;
+let error = 0;
+let currentCaseIndex = 0;
+let shiftCases = cases;
+let doctorName = 'Unknown';
+
 const startButton = document.getElementById('startButton');
 const statusText = document.getElementById('statusText');
 const doctorNameInput = document.querySelector('.doctor-input input');
+const startZone = document.querySelector('.start-zone');
+const gameGrid = document.querySelector('.game-grid');
+const systemLog = document.querySelector('.system-log');
+const statValues = document.querySelectorAll('.vitals-panel dd');
+const emrCode = document.querySelector('.emr-card .panel-code');
+const patientProfile = document.querySelector('.patient-profile');
+const vitalsBlock = document.querySelector('.data-block');
+const aiOutput = document.querySelector('.ai-output');
+const logList = document.querySelector('.system-log ol');
+const warningText = document.querySelector('.system-log .warning-text');
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 
 function getCasesForShift() {
-  const doctorName = doctorNameInput.value.trim() || 'Unknown';
-
   return cases.map((caseData) => {
     if (caseData.id !== 'case-008') {
       return caseData;
@@ -124,7 +148,62 @@ function getCasesForShift() {
   });
 }
 
-startButton.addEventListener('click', () => {
-  getCasesForShift();
-  statusText.textContent = '值班已开始。请等待医院系统响应。';
-});
+function setGameVisibility(isRunning) {
+  startZone.style.display = isRunning ? 'none' : '';
+  gameGrid.style.display = isRunning ? '' : 'none';
+  systemLog.style.display = isRunning ? '' : 'none';
+}
+
+function updateStats() {
+  statValues[0].textContent = trust;
+  statValues[1].textContent = stress;
+  statValues[2].textContent = error;
+}
+
+function renderSystemLog(message) {
+  warningText.textContent = '0 unresolved warnings';
+  logList.innerHTML = `<li>[02:13:00] ${escapeHtml(message)}</li>`;
+}
+
+function renderCase() {
+  const currentCase = shiftCases[currentCaseIndex];
+
+  emrCode.textContent = currentCase.id.toUpperCase();
+  patientProfile.innerHTML = `
+    <p><strong>Name:</strong> ${escapeHtml(currentCase.name)}</p>
+    <p><strong>Age:</strong> ${escapeHtml(currentCase.age)}</p>
+    <p><strong>Complaint:</strong> ${escapeHtml(currentCase.complaint)}</p>
+    <p><strong>Symptoms:</strong> ${currentCase.symptoms.map(escapeHtml).join(' / ')}</p>
+  `;
+  vitalsBlock.innerHTML = `
+    <h3>Recent Vitals</h3>
+    <ul>
+      <li>${escapeHtml(currentCase.vitals)}</li>
+    </ul>
+  `;
+  aiOutput.innerHTML = `
+    <p>&gt; Case loaded: ${escapeHtml(currentCase.id)}</p>
+    <p>&gt; AI diagnosis: ${escapeHtml(currentCase.aiDiagnosis)}</p>
+    <p>&gt; AI advice: ${escapeHtml(currentCase.aiAdvice)}</p>
+  `;
+  statusText.textContent = `Current patient: ${currentCase.name}. Awaiting doctor action.`;
+}
+
+function startShift() {
+  doctorName = doctorNameInput.value.trim() || 'Unknown';
+  trust = 50;
+  stress = 0;
+  error = 0;
+  currentCaseIndex = 0;
+  shiftCases = getCasesForShift();
+
+  setGameVisibility(true);
+  updateStats();
+  renderCase();
+  renderSystemLog('Shift started. AI diagnostic support system online.');
+}
+
+setGameVisibility(false);
+updateStats();
+
+startButton.addEventListener('click', startShift);
