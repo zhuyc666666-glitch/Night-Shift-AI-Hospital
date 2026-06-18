@@ -111,6 +111,7 @@ let error = 0;
 let currentCaseIndex = 0;
 let shiftCases = cases;
 let doctorName = 'Unknown';
+let hasAnsweredCurrentCase = false;
 
 const startButton = document.getElementById('startButton');
 const statusText = document.getElementById('statusText');
@@ -126,6 +127,7 @@ const aiOutput = document.querySelector('.ai-output');
 const logList = document.querySelector('.system-log ol');
 const warningText = document.querySelector('.system-log .warning-text');
 const actionButtons = document.querySelectorAll('.action-stack button');
+const decisionButtons = Array.from(actionButtons).slice(0, 3);
 const nextPatientButton = actionButtons[3];
 
 function escapeHtml(value) {
@@ -155,6 +157,34 @@ function getAiConfidence(index) {
   return confidenceValues[index] || 'ERROR';
 }
 
+function normalizeChoice(choice) {
+  const normalized = choice.toLowerCase();
+
+  if (normalized.includes('trust')) {
+    return 'trust';
+  }
+
+  if (normalized.includes('question')) {
+    return 'question';
+  }
+
+  if (normalized.includes('request')) {
+    return 'request';
+  }
+
+  return normalized;
+}
+
+function formatDelta(value) {
+  return value > 0 ? `+${value}` : `${value}`;
+}
+
+function setDecisionButtonsDisabled(isDisabled) {
+  decisionButtons.forEach((button) => {
+    button.disabled = isDisabled;
+  });
+}
+
 function setGameVisibility(isRunning) {
   startZone.style.display = isRunning ? 'none' : '';
   gameGrid.style.display = isRunning ? '' : 'none';
@@ -168,8 +198,18 @@ function updateStats() {
 }
 
 function renderSystemLog(message) {
-  warningText.textContent = '0 unresolved warnings';
+  warningText.textContent = `${error} unresolved warnings`;
   logList.innerHTML = `<li>[02:13:00] ${escapeHtml(message)}</li>`;
+}
+
+function renderChoiceLog(choiceLabel, isCorrect, deltas, currentCase) {
+  warningText.textContent = `${error} unresolved warnings`;
+  logList.innerHTML = `
+    <li>[02:13:00] Case ${escapeHtml(currentCase.id)} decision recorded: ${escapeHtml(choiceLabel)}.</li>
+    <li>[02:13:01] Result: ${isCorrect ? 'Correct' : 'Incorrect'}.</li>
+    <li>[02:13:02] Change: Trust ${formatDelta(deltas.trust)} / Stress ${formatDelta(deltas.stress)} / Error ${formatDelta(deltas.error)}.</li>
+    <li>[02:13:03] ${escapeHtml(currentCase.resultText)}</li>
+  `;
 }
 
 function showCase() {
@@ -180,6 +220,8 @@ function showCase() {
   const aiConfidence = getAiConfidence(currentCaseIndex);
   const confidenceClass = currentCaseIndex > 1 ? 'alert-line' : '';
 
+  hasAnsweredCurrentCase = false;
+  setDecisionButtonsDisabled(false);
   nextPatientButton.style.display = 'none';
   statusText.textContent = '';
   emrCode.textContent = currentCase.id.toUpperCase();
@@ -206,6 +248,49 @@ function showCase() {
   `;
 }
 
+function handleChoice(choiceLabel) {
+  if (hasAnsweredCurrentCase) {
+    return;
+  }
+
+  const currentCase = shiftCases[currentCaseIndex];
+  const playerChoice = normalizeChoice(choiceLabel);
+  const correctChoice = normalizeChoice(currentCase.correctChoice);
+  const isCorrect = playerChoice === correctChoice;
+  const deltas = {
+    trust: 0,
+    stress: 0,
+    error: 0
+  };
+
+  if (playerChoice === 'request') {
+    deltas.stress = 15;
+    deltas.trust = -5;
+
+    if (!isCorrect) {
+      deltas.error = 1;
+    }
+  } else if (isCorrect) {
+    deltas.trust = 5;
+    deltas.stress = 5;
+  } else {
+    deltas.error = 1;
+    deltas.stress = 20;
+    deltas.trust = -10;
+  }
+
+  trust += deltas.trust;
+  stress += deltas.stress;
+  error += deltas.error;
+  hasAnsweredCurrentCase = true;
+
+  setDecisionButtonsDisabled(true);
+  nextPatientButton.style.display = '';
+  statusText.textContent = isCorrect ? currentCase.resultText : currentCase.horrorEvent;
+  updateStats();
+  renderChoiceLog(choiceLabel, isCorrect, deltas, currentCase);
+}
+
 function startShift() {
   doctorName = doctorNameInput.value.trim() || 'Unknown';
   trust = 50;
@@ -222,6 +307,11 @@ function startShift() {
 
 setGameVisibility(false);
 updateStats();
+setDecisionButtonsDisabled(false);
 nextPatientButton.style.display = 'none';
+
+decisionButtons.forEach((button) => {
+  button.addEventListener('click', () => handleChoice(button.textContent.trim()));
+});
 
 startButton.addEventListener('click', startShift);
