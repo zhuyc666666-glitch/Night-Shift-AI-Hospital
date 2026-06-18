@@ -7,12 +7,103 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="screen-noise" aria-hidden="true"></div>
   <main class="game-shell">
-    <section class="game-panel">
-      <h1>Night Shift: AI Hospital</h1>
-      <p>深夜值班开始。医院系统正在启动...</p>
-      <button id="startButton" type="button">开始值班</button>
-      <p id="statusText" class="status-text">等待玩家进入医院。</p>
+    <header class="top-bar">
+      <div>
+        <p class="kicker">Ward 07 / Emergency AI Support</p>
+        <h1>Night Shift: AI Hospital</h1>
+      </div>
+      <div class="time-readout">02:13 AM</div>
+      <dl class="vitals-panel" aria-label="Shift status">
+        <div>
+          <dt>Trust</dt>
+          <dd>42</dd>
+        </div>
+        <div>
+          <dt>Stress</dt>
+          <dd>18</dd>
+        </div>
+        <div class="warning-stat">
+          <dt>Error</dt>
+          <dd>03</dd>
+        </div>
+      </dl>
+    </header>
+
+    <section class="start-zone" aria-labelledby="start-title">
+      <div>
+        <h2 id="start-title">Start Shift</h2>
+        <p>Enter the night ward and review each AI-assisted case before the system makes its final call.</p>
+      </div>
+      <label class="doctor-input">
+        <span>值班医生</span>
+        <input type="text" placeholder="请输入值班医生姓名" autocomplete="name">
+      </label>
+      <button id="startButton" class="primary-button" type="button">Start Shift</button>
+    </section>
+
+    <section class="game-grid" aria-label="Game interface">
+      <article class="terminal-card emr-card">
+        <div class="panel-heading">
+          <span>Patient EMR</span>
+          <span class="panel-code">EMR-0213</span>
+        </div>
+        <div class="patient-profile">
+          <p><strong>Name:</strong> Lin Mei</p>
+          <p><strong>Age:</strong> 34</p>
+          <p><strong>Room:</strong> 7B Observation</p>
+          <p><strong>Complaint:</strong> Chest pressure, cold sweat, fragmented speech.</p>
+        </div>
+        <div class="data-block">
+          <h3>Recent Vitals</h3>
+          <ul>
+            <li>HR: 118 bpm</li>
+            <li>BP: 92/58 mmHg</li>
+            <li>SpO2: 91%</li>
+            <li>Temp: 37.8 C</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="terminal-card ai-card">
+        <div class="panel-heading">
+          <span>AI Diagnosis Terminal</span>
+          <span class="status-live">ONLINE</span>
+        </div>
+        <div class="ai-output">
+          <p>&gt; Loading triage model...</p>
+          <p>&gt; Pattern match confidence: 71%</p>
+          <p class="alert-line">&gt; Warning: contradictory symptom cluster detected.</p>
+          <p>&gt; Suggested diagnosis pending doctor review.</p>
+        </div>
+        <p id="statusText" class="status-text">Awaiting shift authorization.</p>
+      </article>
+
+      <aside class="terminal-card actions-card">
+        <div class="panel-heading">
+          <span>Doctor Actions</span>
+          <span class="panel-code">MANUAL</span>
+        </div>
+        <div class="action-stack">
+          <button type="button">Trust AI</button>
+          <button type="button">Question AI</button>
+          <button type="button">Request More Tests</button>
+          <button type="button">Next Patient</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="system-log terminal-card" aria-labelledby="log-title">
+      <div class="panel-heading">
+        <h2 id="log-title">System Log</h2>
+        <span class="warning-text">3 unresolved warnings</span>
+      </div>
+      <ol>
+        <li>[02:09:44] Night shift terminal initialized.</li>
+        <li>[02:11:02] AI diagnostic assistant connected to EMR archive.</li>
+        <li class="log-warning">[02:13:00] Error variance detected in patient risk score.</li>
+      </ol>
     </section>
   </main>
 
